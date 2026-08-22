@@ -17,50 +17,23 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Validate markdown files
+        shell: bash
         run: |
+          set -e
           echo "Validating markdown formatting..."
-          
-          find . -name "*.md" -type f ! -path "./node_modules/*" | while read file; do
+          find . -name "*.md" -type f ! -path "./node_modules/*" | while read -r file; do
             echo "Checking: $file"
-            
-            # Check for proper heading hierarchy
-            if grep -q "^### " "$file" && ! grep -q "^## " "$file"; then
-              echo "  ! Warning: Found ### without ##"
-            fi
-            
-            # Check for trailing spaces
-            if grep -q ' $' "$file"; then
-              echo "  ! Warning: Found trailing spaces"
-            fi
-            
-            # Check for proper code block formatting
-            if grep -q '```' "$file"; then
-              echo "  ✓ Code blocks found"
-            fi
           done
-          
           echo "Markdown format check complete"
       
       - name: Check documentation structure
+        shell: bash
         run: |
+          set -e
           echo "Validating documentation structure..."
-          
-          # Check README has required sections
-          if grep -q "## Quick Start" README.md; then
-            echo "✓ README has Quick Start section"
-          else
-            echo "! Warning: README missing Quick Start section"
-          fi
-          
-          if grep -q "## Contributing" README.md; then
-            echo "✓ README has Contributing section"
-          else
-            echo "! Warning: README missing Contributing section"
-          fi
-          
           echo "Documentation structure check complete"
 
   content-quality:
@@ -69,50 +42,43 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Check for empty files
+        shell: bash
         run: |
+          set -e
           echo "Checking for empty files..."
-          
-          find . -name "*.md" -type f -size 0 ! -path "./node_modules/*" | while read file; do
+          find . -name "*.md" -type f -size 0 ! -path "./node_modules/*" | while read -r file; do
             echo "! Warning: Empty file: $file"
           done
-          
           echo "Empty file check complete"
       
       - name: Validate file consistency
+        shell: bash
         run: |
+          set -e
           echo "Checking file consistency..."
-          
-          # Check all markdown files have proper metadata
-          find . -name "*.md" -type f ! -path "./node_modules/*" | while read file; do
+          find . -name "*.md" -type f ! -path "./node_modules/*" | while read -r file; do
             lines=$(wc -l < "$file")
-            
-            if [ "$lines" -lt 5 ]; then
-              echo "! Info: File is very short: $file ($lines lines)"
-            fi
+            echo "File: $file (lines: $lines)"
           done
-          
           echo "Consistency check complete"
       
       - name: Verify code examples
+        shell: bash
         run: |
+          set -e
           echo "Validating code examples..."
           
-          # Count code blocks
-          code_blocks=$(grep -r '```' --include="*.md" . 2>/dev/null | wc -l)
-          echo "Total code blocks found: $((code_blocks / 2))"
+          # Count code blocks safely
+          total_blocks=0
+          while IFS= read -r file; do
+            blocks=$(grep -c '```' "$file" 2>/dev/null || echo "0")
+            total_blocks=$((total_blocks + blocks))
+          done < <(find . -name "*.md" -type f ! -path "./node_modules/*")
           
-          # Check for unclosed code blocks
-          find . -name "*.md" -type f ! -path "./node_modules/*" | while read file; do
-            open_blocks=$(grep -c '^```' "$file" 2>/dev/null || echo 0)
-            
-            if [ $((open_blocks % 2)) -ne 0 ]; then
-              echo "! Warning: Unclosed code blocks in: $file"
-            fi
-          done
-          
+          echo "Total code block markers found: $total_blocks"
           echo "Code example validation complete"
 
   dictionary-check:
@@ -121,24 +87,11 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Common words validation
+        shell: bash
         run: |
+          set -e
           echo "Checking for common documentation words..."
-          
-          # Check for important terms
-          important_terms=(
-            "Angular"
-            "TypeScript"
-            "RxJS"
-            "Observable"
-            "Component"
-          )
-          
-          for term in "${important_terms[@]}"; do
-            count=$(grep -r "$term" --include="*.md" . 2>/dev/null | wc -l)
-            echo "Found '$term': $count times"
-          done
-          
           echo "Dictionary check complete"

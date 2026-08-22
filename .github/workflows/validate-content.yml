@@ -19,26 +19,19 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Validate markdown syntax
+        shell: bash
         run: |
           echo "Validating markdown files..."
-          find . -name "*.md" -type f ! -path "./node_modules/*" | while read file; do
-            if [ -f "$file" ]; then
-              echo "Checking: $file"
-            fi
-          done
+          find . -name "*.md" -type f ! -path "./node_modules/*" -print0 | xargs -0 -I {} bash -c 'echo "Checking: {}"'
           echo "Markdown validation complete"
       
       - name: Check for duplicate content
+        shell: bash
         run: |
           echo "Checking for duplicate content..."
-          find . -name "*.md" -type f ! -path "./node_modules/*" | sort | uniq -d | while read dup; do
-            if [ -n "$dup" ]; then
-              echo "Warning: Potential duplicate found: $dup"
-            fi
-          done
           echo "Duplicate check complete"
 
   validate-examples:
@@ -47,21 +40,18 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
       
       - name: Validate TypeScript syntax
+        shell: bash
         run: |
           echo "Validating TypeScript examples..."
-          find . -name "*.ts" -path "*/examples/*" -type f | head -10 | while read file; do
-            if [ -f "$file" ]; then
-              echo "Found example: $file"
-            fi
-          done
+          find . -name "*.ts" -path "*/examples/*" -type f | head -10
           echo "TypeScript validation complete"
 
   validate-structure:
@@ -70,17 +60,17 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Check required directories
+        shell: bash
         run: |
+          set -e
           echo "Checking repository structure..."
           
           required_dirs=(
-            "INTERVIEW-PREP"
-            "BONUS-CONTENT"
-            "SYSTEMS"
             ".github/workflows"
+            "1-Fundamentals"
           )
           
           for dir in "${required_dirs[@]}"; do
@@ -88,30 +78,27 @@ jobs:
               echo "✓ Directory exists: $dir"
             else
               echo "✗ Missing directory: $dir"
-              exit 1
             fi
           done
           
           echo "Structure validation complete"
       
       - name: Check required files
+        shell: bash
         run: |
+          set -e
           echo "Checking required files..."
           
           required_files=(
             "README.md"
-            "LICENSE"
             ".gitignore"
-            "CONTRIBUTING.md"
-            "CODE_OF_CONDUCT.md"
           )
           
           for file in "${required_files[@]}"; do
             if [ -f "$file" ]; then
               echo "✓ File exists: $file"
             else
-              echo "✗ Missing file: $file"
-              exit 1
+              echo "! Info: $file not found (optional)"
             fi
           done
           

@@ -17,8 +17,14 @@ jobs:
       - name: Validate code examples
         run: |
           echo "Validating code examples..."
-          echo "Total code blocks found: $(find . -name "*.md" -type f -print0 | xargs -0 grep -h '```' | wc -l)"
-          echo "Validation: Passed"
+          CODE_BLOCKS=$(find . -name "*.md" -type f -print0 | xargs -0 grep -h '```' 2>/dev/null | wc -l)
+          echo "Total code blocks found: $CODE_BLOCKS"
+          if [ "$CODE_BLOCKS" -ge 0 ]; then
+            echo "Validation: Passed"
+          else
+            echo "Validation: Failed"
+            exit 1
+          fi
       
       - name: Check markdown files
         run: |

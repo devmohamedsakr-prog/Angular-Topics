@@ -2,8 +2,13 @@ name: Automated Release
 
 on:
   push:
+    branches: [main]
     tags:
       - 'v*'
+  workflow_run:
+    workflows: ["Automated Tagging"]
+    types: [completed]
+    branches: [main]
 
 jobs:
   prepare-release:
@@ -64,15 +69,22 @@ Features:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       
+      - name: Get latest tag
+        id: tag
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest tag: $LATEST_TAG"
+      
       - name: Create release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Angular Topics v${{ needs.prepare-release.outputs.VERSION }}
+          tag_name: ${{ steps.tag.outputs.LATEST_TAG }}
+          release_name: Angular Topics ${{ steps.tag.outputs.LATEST_TAG }}
           body: |
-            Version: ${{ needs.prepare-release.outputs.VERSION }}
+            Version: ${{ steps.tag.outputs.LATEST_TAG }}
             
             ## What's Included
             - 14 core Angular topics
@@ -91,18 +103,13 @@ Features:
             - System Modules: 9
             - Production Ready: Yes
             
-            ## Changes Since Previous Release
-            ${{ needs.prepare-release.outputs.CHANGELOG }}
-            
             ## Resources
             - Repository: https://github.com/devmohamedsakr-prog/Angular-Topics
             - Documentation: See README.md
             - Contributing: See CONTRIBUTING.md
             
-            ---
-            
-            **Release Date:** $(date -u +'%Y-%m-%d')
-            **Status:** Production Ready
+            Release Date: $(date -u +'%Y-%m-%d')
+            Status: Production Ready
           draft: false
           prerelease: false
 

@@ -21,7 +21,76 @@ All notable changes to Angular-Topics are documented here following the Keep a C
 
 ---
 
-## v0.0.9 - 2026-08-22
+## v0.0.24 - 2026-08-22
+
+### Added
+
+#### 2-Angular-Basics/1-CLI-and-Setup Refactoring
+
+- Split monolithic CLI-and-Setup guide into 5 focused explanation files
+- Created 7 practical example files with 100+ CLI commands
+- Added shell scripts for common workflows
+- Added Docker multi-stage build configuration
+- Added Nginx SPA configuration file
+- Master README with learning paths and navigation
+
+#### New Files
+
+**Explanation Files:**
+- `1-cli-installation-overview.md` - CLI installation and verification
+- `2-creating-serving-projects.md` - Project creation and development server
+- `3-project-structure-configuration.md` - Configuration files and structure
+- `4-generating-building.md` - Code generation and production builds
+- `5-testing-deployment-best-practices.md` - Testing and deployment
+
+**Example Files:**
+- `1-installation-setup-scripts.sh` - Installation and setup commands
+- `2-project-creation-commands.sh` - Project initialization commands
+- `3-generation-commands.sh` - Code scaffolding commands
+- `4-build-deployment-commands.sh` - Build and deployment commands
+- `5-docker-nginx-config.dockerfile` - Multi-stage Docker build
+- `nginx.conf` - Nginx SPA configuration
+- `README.md` - Master navigation and learning guide
+
+### Improvements
+
+- Clean separation of concerns by topic
+- Reduced file complexity and size
+- Better navigation and learning paths
+- Complete command examples and configurations
+- No duplicate content
+
+### Fixed
+
+- Documentation Quality workflow - removed bash arithmetic errors
+- Assess Content Quality job - safe null-delimited file iteration
+- Validated workflow syntax for all jobs
+
+---
+
+## v0.0.23 - 2026-08-22
+
+### Fixed
+
+- Documentation Quality workflow - Assess Content Quality job bash syntax errors
+- Removed problematic arithmetic expansion on string variables
+- Implemented safe file iteration with null-delimited paths
+
+---
+
+## v0.0.22 - 2026-08-22
+
+### Added
+
+- Labeler configuration for auto-labeling PRs based on file paths
+- Enhanced stale.yml workflow with better configuration
+- Improved label.yml workflow with sync support
+- Enhanced manual.yml as content validation tool
+
+### Improved
+
+- Automated workflow triggers and job logic
+- Better documentation in workflow files
 
 ### Added
 

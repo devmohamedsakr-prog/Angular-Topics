@@ -2,81 +2,114 @@
 
 All notable changes to the Angular-Topics project are documented in this file.
 
-## Latest Release: v0.0.9
+## Latest Release: v0.0.24
 
 **Date**: 2026-08-22  
 **Status**: Production Ready
 
-### What's Included
+### What's New
 
-- 14 core Angular topics with examples
-- 150+ interview questions with answers
+- **2-Angular-Basics/1-CLI-and-Setup Refactoring** - Split into 5 focused files
+- **5 Explanation Files** - Comprehensive CLI and setup guides
+- **7 Example Files** - 100+ practical commands and configurations
+- **Docker & Nginx Configs** - Production deployment ready
+- **Master README** - Navigation and learning paths
+
+### Content Statistics
+
+- 2-Angular-Basics/1-CLI-and-Setup files: 13 total
+- Explanation files: 5 focused guides
+- Example scripts: 4 shell scripts + 2 configs
+- Total commands documented: 100+
+- Lines of documentation: 5,000+
+
+### Features
+
+- Clean separation of concerns by topic
+- Comprehensive command reference
+- Production deployment examples
+- CI/CD workflow documentation
+- Best practices and troubleshooting
+- Professional code organization
+
+---
+
+## Release History
+
+### v0.0.24 (Current)
+
+**Release Date**: 2026-08-22
+
+#### What's New
+
+- **CLI-and-Setup Refactoring**: 5 focused explanation files
+- **Example Commands**: 100+ practical CLI commands
+- **Docker Support**: Multi-stage build for production
+- **Nginx Configuration**: SPA-ready web server config
+- **Documentation Quality**: Fixed workflow syntax errors
+
+#### New Files
+
+```
+2-Angular-Basics/1-CLI-and-Setup/
+├── explanation/
+│   ├── 1-cli-installation-overview.md
+│   ├── 2-creating-serving-projects.md
+│   ├── 3-project-structure-configuration.md
+│   ├── 4-generating-building.md
+│   └── 5-testing-deployment-best-practices.md
+├── examples/
+│   ├── 1-installation-setup-scripts.sh
+│   ├── 2-project-creation-commands.sh
+│   ├── 3-generation-commands.sh
+│   ├── 4-build-deployment-commands.sh
+│   ├── 5-docker-nginx-config.dockerfile
+│   └── nginx.conf
+└── README.md (Master navigation)
+```
+
+#### Improvements
+
+- Better code organization and structure
+- Reduced complexity with focused topics
+- Enhanced learning experience
+- Complete workflow documentation
+- Production-ready configurations
+
+### v0.0.23
+
+**Release Date**: 2026-08-22
+
+#### Fixed
+
+- Documentation Quality workflow - Assess Content Quality job
+- Removed bash arithmetic syntax errors
+- Safe file iteration with null-delimited paths
+
+### v0.0.22
+
+**Release Date**: 2026-08-22
+
+#### Added
+
+- PR auto-labeler configuration
+- Enhanced workflow automation
+- Improved manual content validation
+
+### v0.0.9 (Initial)
+
+**Release Date**: 2026-08-22
+
+#### Initial Release
+
+- 14 core Angular topics
+- 150+ interview questions
 - 2 real-world system implementations
 - 5 system design scenarios
 - 10 architecture decision records
 - 8 code challenges with solutions
 - 3 mock interview scripts
 - 7 advanced guides
-
-### Content Statistics
-
-- Total Lines: 27,272+
-- Code Examples: 250+
-- Interview Q&A: 150+
-- System Modules: 9
-- Markdown Files: 100+
-- Coverage: Enterprise-ready
-
-### Features
-
-- Comprehensive Angular learning resource
-- Production-ready code examples
-- Interview preparation materials
-- Real-world system designs
-- Best practices documentation
-- Professional code samples
-
-### Repository
-
-- GitHub: https://github.com/devmohamedsakr-prog/Angular-Topics
-- Documentation: See README.md
-- Contributing: See CONTRIBUTING.md
-- Security: See SECURITY.md
-
----
-
-## Release Notes by Version
-
-### v0.0.9 (Current)
-
-**Release Date**: 2026-08-22
-
-#### What's New
-
-- Complete Angular-Topics learning resource
-- 27,272+ lines of documentation
-- All core topics documented
-- Production-ready code examples
-- Interview preparation guide
-- Real-world system implementations
-
-#### Features
-
-- 14 Angular core topics
-- 150+ interview questions
-- Code examples and patterns
-- System design scenarios
-- Architecture documentation
-- Best practices guide
-
-#### Improvements
-
-- Professional documentation
-- Well-organized structure
-- Easy navigation
-- Clear examples
-- Complete coverage
-- Enterprise standards
 
 #### Content
 

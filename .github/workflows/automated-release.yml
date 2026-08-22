@@ -19,7 +19,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -28,14 +28,36 @@ jobs:
         run: |
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest tag: $LATEST_TAG"
+
+      - name: Check if release exists
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${{ steps.tag.outputs.LATEST_TAG }}" &>/dev/null; then
+            echo "EXISTS=true" >> $GITHUB_OUTPUT
+            echo "Release already exists"
+          else
+            echo "EXISTS=false" >> $GITHUB_OUTPUT
+            echo "Release does not exist"
+          fi
 
       - name: Create release
-        uses: actions/create-release@v1
+        if: steps.check.outputs.EXISTS == 'false'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.tag.outputs.LATEST_TAG }}
-          release_name: Angular Topics ${{ steps.tag.outputs.LATEST_TAG }}
-          body: "Angular Topics Release - Production Ready. Repository: https://github.com/devmohamedsakr-prog/Angular-Topics. Content: 27272+ lines, 250+ code examples, 150+ interview questions, 9 system modules."
-          draft: false
-          prerelease: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.tag.outputs.LATEST_TAG }}" \
+            --title "Angular Topics ${{ steps.tag.outputs.LATEST_TAG }}" \
+            --notes "Angular Topics Release - Production Ready. Repository: https://github.com/devmohamedsakr-prog/Angular-Topics. Content: 27272+ lines, 250+ code examples, 150+ interview questions, 9 system modules." \
+            --draft=false \
+            --prerelease=false
+
+      - name: Release status
+        run: |
+          if [ "${{ steps.check.outputs.EXISTS }}" = "true" ]; then
+            echo "Release Status: Already exists (skipped creation)"
+          else
+            echo "Release Status: Created successfully"
+          fi

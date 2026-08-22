@@ -1,0 +1,133 @@
+name: Check Links
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    name: Verify Documentation Links
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Check internal links
+        run: |
+          echo "Checking internal links..."
+          
+          # Find all markdown files
+          find . -name "*.md" -type f ! -path "./node_modules/*" | while read file; do
+            echo "Scanning: $file"
+            
+            # Extract links from markdown
+            grep -o '\[.*\](.*/)' "$file" | sed 's/.*(\(.*\)).*/\1/' | while read link; do
+              # Check if link is internal
+              if [[ $link == /* ]] || [[ $link != http* ]]; then
+                if [ -f ".${link}" ] || [ -f "${link}" ]; then
+                  echo "  ✓ Link verified: $link"
+                else
+                  echo "  ! Warning: Broken link: $link"
+                fi
+              fi
+            done
+          done
+          
+          echo "Internal link check complete"
+      
+      - name: Check GitHub repository links
+        run: |
+          echo "Verifying GitHub repository links..."
+          
+          github_url="https://github.com/devmohamedsakr-prog/Angular-Topics"
+          
+          # Verify repository is accessible
+          if curl -s -I "$github_url" | grep -q "200\|301"; then
+            echo "✓ Repository link is valid"
+          else
+            echo "! Warning: Repository link may be inaccessible"
+          fi
+
+  check-references:
+    runs-on: ubuntu-latest
+    name: Verify Content References
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Check topic references
+        run: |
+          echo "Verifying topic references..."
+          
+          topics=(
+            "1-Fundamentals"
+            "2-Angular-Basics"
+            "3-Services-and-DI"
+            "4-RxJS-and-Observables"
+            "5-Routing-and-Navigation"
+            "6-Forms"
+            "7-HTTP-and-Backend"
+            "8-State-Management"
+            "9-Advanced-Topics"
+            "9-Testing"
+            "10-Security"
+            "11-Deployment-and-Build"
+            "12-Alignment-Methods"
+            "13-GitHub-Collaboration"
+          )
+          
+          for topic in "${topics[@]}"; do
+            if [ -d "$topic" ]; then
+              echo "✓ Topic folder exists: $topic"
+            else
+              echo "! Warning: Missing topic: $topic"
+            fi
+          done
+          
+          echo "Topic reference check complete"
+      
+      - name: Check interview prep references
+        run: |
+          echo "Verifying INTERVIEW-PREP references..."
+          
+          interview_files=(
+            "01-REACTIVE-FORMS-QA.md"
+            "02-HTTPCLIENT-QA.md"
+            "03-DEPENDENCY-INJECTION-QA.md"
+            "04-OBSERVABLES-RXJS-QA.md"
+            "05-ROUTING-NAVIGATION-QA.md"
+            "06-TEMPLATES-BINDING-QA.md"
+            "07-DIRECTIVES-QA.md"
+            "08-CHANGE-DETECTION-QA.md"
+            "09-UNIT-TESTING-QA.md"
+            "10-NGRX-STATE-QA.md"
+            "11-SYSTEM-DESIGN-SCENARIOS.md"
+            "12-ARCHITECTURE-DECISIONS.md"
+            "13-CODE-CHALLENGES.md"
+            "14-MOCK-INTERVIEWS.md"
+          )
+          
+          for file in "${interview_files[@]}"; do
+            if [ -f "INTERVIEW-PREP/$file" ]; then
+              echo "✓ Interview file exists: $file"
+            else
+              echo "! Warning: Missing interview file: $file"
+            fi
+          done
+          
+          echo "Interview prep verification complete"

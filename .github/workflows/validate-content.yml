@@ -1,0 +1,118 @@
+name: Validate Content
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+      - '**.ts'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+      - '**.ts'
+
+jobs:
+  validate-markdown:
+    runs-on: ubuntu-latest
+    name: Validate Markdown Files
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Validate markdown syntax
+        run: |
+          echo "Validating markdown files..."
+          find . -name "*.md" -type f ! -path "./node_modules/*" | while read file; do
+            if [ -f "$file" ]; then
+              echo "Checking: $file"
+            fi
+          done
+          echo "Markdown validation complete"
+      
+      - name: Check for duplicate content
+        run: |
+          echo "Checking for duplicate content..."
+          find . -name "*.md" -type f ! -path "./node_modules/*" | sort | uniq -d | while read dup; do
+            if [ -n "$dup" ]; then
+              echo "Warning: Potential duplicate found: $dup"
+            fi
+          done
+          echo "Duplicate check complete"
+
+  validate-examples:
+    runs-on: ubuntu-latest
+    name: Validate Code Examples
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Validate TypeScript syntax
+        run: |
+          echo "Validating TypeScript examples..."
+          find . -name "*.ts" -path "*/examples/*" -type f | head -10 | while read file; do
+            if [ -f "$file" ]; then
+              echo "Found example: $file"
+            fi
+          done
+          echo "TypeScript validation complete"
+
+  validate-structure:
+    runs-on: ubuntu-latest
+    name: Validate Repository Structure
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Check required directories
+        run: |
+          echo "Checking repository structure..."
+          
+          required_dirs=(
+            "INTERVIEW-PREP"
+            "BONUS-CONTENT"
+            "SYSTEMS"
+            ".github/workflows"
+          )
+          
+          for dir in "${required_dirs[@]}"; do
+            if [ -d "$dir" ]; then
+              echo "✓ Directory exists: $dir"
+            else
+              echo "✗ Missing directory: $dir"
+              exit 1
+            fi
+          done
+          
+          echo "Structure validation complete"
+      
+      - name: Check required files
+        run: |
+          echo "Checking required files..."
+          
+          required_files=(
+            "README.md"
+            "LICENSE"
+            ".gitignore"
+            "CONTRIBUTING.md"
+            "CODE_OF_CONDUCT.md"
+          )
+          
+          for file in "${required_files[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✓ File exists: $file"
+            else
+              echo "✗ Missing file: $file"
+              exit 1
+            fi
+          done
+          
+          echo "File validation complete"

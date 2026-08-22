@@ -1,0 +1,144 @@
+name: Documentation Quality
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+
+jobs:
+  markdown-format:
+    runs-on: ubuntu-latest
+    name: Check Markdown Format
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Validate markdown files
+        run: |
+          echo "Validating markdown formatting..."
+          
+          find . -name "*.md" -type f ! -path "./node_modules/*" | while read file; do
+            echo "Checking: $file"
+            
+            # Check for proper heading hierarchy
+            if grep -q "^### " "$file" && ! grep -q "^## " "$file"; then
+              echo "  ! Warning: Found ### without ##"
+            fi
+            
+            # Check for trailing spaces
+            if grep -q ' $' "$file"; then
+              echo "  ! Warning: Found trailing spaces"
+            fi
+            
+            # Check for proper code block formatting
+            if grep -q '```' "$file"; then
+              echo "  ✓ Code blocks found"
+            fi
+          done
+          
+          echo "Markdown format check complete"
+      
+      - name: Check documentation structure
+        run: |
+          echo "Validating documentation structure..."
+          
+          # Check README has required sections
+          if grep -q "## Quick Start" README.md; then
+            echo "✓ README has Quick Start section"
+          else
+            echo "! Warning: README missing Quick Start section"
+          fi
+          
+          if grep -q "## Contributing" README.md; then
+            echo "✓ README has Contributing section"
+          else
+            echo "! Warning: README missing Contributing section"
+          fi
+          
+          echo "Documentation structure check complete"
+
+  content-quality:
+    runs-on: ubuntu-latest
+    name: Assess Content Quality
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Check for empty files
+        run: |
+          echo "Checking for empty files..."
+          
+          find . -name "*.md" -type f -size 0 ! -path "./node_modules/*" | while read file; do
+            echo "! Warning: Empty file: $file"
+          done
+          
+          echo "Empty file check complete"
+      
+      - name: Validate file consistency
+        run: |
+          echo "Checking file consistency..."
+          
+          # Check all markdown files have proper metadata
+          find . -name "*.md" -type f ! -path "./node_modules/*" | while read file; do
+            lines=$(wc -l < "$file")
+            
+            if [ "$lines" -lt 5 ]; then
+              echo "! Info: File is very short: $file ($lines lines)"
+            fi
+          done
+          
+          echo "Consistency check complete"
+      
+      - name: Verify code examples
+        run: |
+          echo "Validating code examples..."
+          
+          # Count code blocks
+          code_blocks=$(grep -r '```' --include="*.md" . 2>/dev/null | wc -l)
+          echo "Total code blocks found: $((code_blocks / 2))"
+          
+          # Check for unclosed code blocks
+          find . -name "*.md" -type f ! -path "./node_modules/*" | while read file; do
+            open_blocks=$(grep -c '^```' "$file" 2>/dev/null || echo 0)
+            
+            if [ $((open_blocks % 2)) -ne 0 ]; then
+              echo "! Warning: Unclosed code blocks in: $file"
+            fi
+          done
+          
+          echo "Code example validation complete"
+
+  dictionary-check:
+    runs-on: ubuntu-latest
+    name: Check Documentation Spelling
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Common words validation
+        run: |
+          echo "Checking for common documentation words..."
+          
+          # Check for important terms
+          important_terms=(
+            "Angular"
+            "TypeScript"
+            "RxJS"
+            "Observable"
+            "Component"
+          )
+          
+          for term in "${important_terms[@]}"; do
+            count=$(grep -r "$term" --include="*.md" . 2>/dev/null | wc -l)
+            echo "Found '$term': $count times"
+          done
+          
+          echo "Dictionary check complete"

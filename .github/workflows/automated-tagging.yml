@@ -1,0 +1,156 @@
+name: Automated Tagging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: Version bump type
+        required: true
+        default: patch
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    name: Detect Changes
+    outputs:
+      should-tag: ${{ steps.detect.outputs.should-tag }}
+      version-type: ${{ steps.detect.outputs.version-type }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Detect version change
+        id: detect
+        run: |
+          echo "Detecting changes since last tag..."
+          
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LAST_TAG" ]; then
+            echo "First release - setting version to v1.0.0"
+            echo "should-tag=true" >> $GITHUB_OUTPUT
+            echo "version-type=initial" >> $GITHUB_OUTPUT
+          else
+            # Get commits since last tag
+            COMMITS=$(git log $LAST_TAG..HEAD --oneline)
+            
+            if [ -z "$COMMITS" ]; then
+              echo "No changes since last tag"
+              echo "should-tag=false" >> $GITHUB_OUTPUT
+            else
+              # Analyze commit messages for version bump
+              if echo "$COMMITS" | grep -i "^BREAKING\|^feat!"; then
+                echo "Breaking changes detected - major version bump"
+                echo "should-tag=true" >> $GITHUB_OUTPUT
+                echo "version-type=major" >> $GITHUB_OUTPUT
+              elif echo "$COMMITS" | grep -i "^feat"; then
+                echo "New features detected - minor version bump"
+                echo "should-tag=true" >> $GITHUB_OUTPUT
+                echo "version-type=minor" >> $GITHUB_OUTPUT
+              elif echo "$COMMITS" | grep -i "^fix\|^docs\|^style\|^refactor"; then
+                echo "Bug fixes/updates detected - patch version bump"
+                echo "should-tag=true" >> $GITHUB_OUTPUT
+                echo "version-type=patch" >> $GITHUB_OUTPUT
+              else
+                echo "No version-triggering commits found"
+                echo "should-tag=false" >> $GITHUB_OUTPUT
+              fi
+            fi
+          fi
+
+  calculate-version:
+    runs-on: ubuntu-latest
+    name: Calculate Next Version
+    needs: detect-changes
+    if: needs.detect-changes.outputs.should-tag == 'true'
+    outputs:
+      new-version: ${{ steps.calculate.outputs.new-version }}
+      version-type: ${{ steps.calculate.outputs.version-type }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Calculate version
+        id: calculate
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          VERSION_TYPE=${{ needs.detect-changes.outputs.version-type }}
+          
+          # Remove 'v' prefix
+          VERSION=${LAST_TAG#v}
+          
+          # Split version into parts
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          
+          case $VERSION_TYPE in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch|initial)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
+          echo "Calculated new version: $NEW_VERSION"
+          echo "new-version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version-type=$VERSION_TYPE" >> $GITHUB_OUTPUT
+
+  create-tag:
+    runs-on: ubuntu-latest
+    name: Create Version Tag
+    needs: calculate-version
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Configure git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+      
+      - name: Create and push tag
+        run: |
+          NEW_VERSION=${{ needs.calculate-version.outputs.new-version }}
+          
+          echo "Creating tag: $NEW_VERSION"
+          git tag -a $NEW_VERSION -m "Release $NEW_VERSION"
+          
+          git push origin $NEW_VERSION
+          echo "Tag created and pushed: $NEW_VERSION"
+
+  notify-release:
+    runs-on: ubuntu-latest
+    name: Notify Release
+    needs: [calculate-version, create-tag]
+    if: success()
+    
+    steps:
+      - name: Release notification
+        run: |
+          VERSION=${{ needs.calculate-version.outputs.new-version }}
+          echo "Release $VERSION has been created successfully"
+          echo "Repository: https://github.com/devmohamedsakr-prog/Angular-Topics"
+          echo "Release URL: https://github.com/devmohamedsakr-prog/Angular-Topics/releases/tag/$VERSION"

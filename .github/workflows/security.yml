@@ -1,0 +1,129 @@
+name: Security Checks
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    name: Security Audit
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Check for secrets
+        run: |
+          echo "Checking for exposed secrets..."
+          
+          # Patterns to detect
+          patterns=(
+            "password.*="
+            "api.?key.*="
+            "secret.*="
+            "token.*="
+            "private.?key"
+            "aws.?access"
+          )
+          
+          found_secrets=0
+          
+          for pattern in "${patterns[@]}"; do
+            if grep -r -i "$pattern" --include="*.md" --include="*.ts" --include="*.json" . 2>/dev/null | grep -v ".git" | grep -v "node_modules"; then
+              echo "! Warning: Potential secret found matching: $pattern"
+              found_secrets=$((found_secrets + 1))
+            fi
+          done
+          
+          if [ $found_secrets -eq 0 ]; then
+            echo "✓ No obvious secrets detected"
+          fi
+      
+      - name: Check for suspicious files
+        run: |
+          echo "Checking for suspicious files..."
+          
+          # Check for files that shouldn't be in repo
+          suspicious_patterns=(
+            "*.pem"
+            "*.key"
+            ".env"
+            ".env.*"
+            "*credentials*"
+            "*password*"
+          )
+          
+          for pattern in "${suspicious_patterns[@]}"; do
+            if find . -name "$pattern" ! -path "./.git/*" ! -path "./node_modules/*" -type f 2>/dev/null | grep -q .; then
+              echo "! Warning: Found suspicious file matching: $pattern"
+            fi
+          done
+          
+          echo "Suspicious file check complete"
+      
+      - name: Verify file permissions
+        run: |
+          echo "Checking file permissions..."
+          
+          # Check for executable scripts
+          find . -type f -perm /111 ! -path "./.git/*" ! -path "./node_modules/*" -exec echo "Executable: {}" \;
+          
+          echo "Permission check complete"
+
+  content-security:
+    runs-on: ubuntu-latest
+    name: Content Security Check
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Check markdown files for malicious content
+        run: |
+          echo "Scanning markdown files for suspicious content..."
+          
+          suspicious_content=(
+            "eval("
+            "exec("
+            "system("
+          )
+          
+          for content in "${suspicious_content[@]}"; do
+            if grep -r "$content" --include="*.md" . 2>/dev/null; then
+              echo "! Warning: Found suspicious content: $content"
+            fi
+          done
+          
+          echo "Markdown security scan complete"
+      
+      - name: Check TypeScript examples for security issues
+        run: |
+          echo "Checking TypeScript examples..."
+          
+          # Check for common security issues
+          if grep -r "dangerouslySetInnerHTML" --include="*.ts" . 2>/dev/null; then
+            echo "! Warning: Found dangerouslySetInnerHTML usage"
+          fi
+          
+          if grep -r "innerHTML" --include="*.ts" . 2>/dev/null | grep -v "example" | grep -v "comment"; then
+            echo "! Info: Found innerHTML usage (verify it's intentional)"
+          fi
+          
+          echo "TypeScript security scan complete"
+      
+      - name: Verify license compliance
+        run: |
+          echo "Checking license compliance..."
+          
+          if [ -f "LICENSE" ]; then
+            echo "✓ LICENSE file found"
+          else
+            echo "! Warning: LICENSE file missing"
+          fi
+          
+          echo "License check complete"

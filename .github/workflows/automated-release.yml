@@ -86,7 +86,8 @@ Features:
           body: |
             Version: ${{ steps.tag.outputs.LATEST_TAG }}
             
-            ## What's Included
+            What's Included
+            ===============
             - 14 core Angular topics
             - 150+ interview questions with answers
             - 2 real-world system implementations
@@ -96,20 +97,21 @@ Features:
             - 3 mock interview scripts
             - 7 advanced guides
             
-            ## Content Statistics
+            Content Statistics
+            ==================
             - Total Lines: 27,272+
             - Code Examples: 250+
             - Interview Q&A: 150+
             - System Modules: 9
             - Production Ready: Yes
             
-            ## Resources
+            Resources
+            =========
             - Repository: https://github.com/devmohamedsakr-prog/Angular-Topics
             - Documentation: See README.md
             - Contributing: See CONTRIBUTING.md
             
-            Release Date: $(date -u +'%Y-%m-%d')
-            Status: Production Ready
+            Release Status: Production Ready
           draft: false
           prerelease: false
 

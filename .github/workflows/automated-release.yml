@@ -9,6 +9,8 @@ jobs:
   prepare-release:
     runs-on: ubuntu-latest
     name: Prepare Release Artifacts
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout code

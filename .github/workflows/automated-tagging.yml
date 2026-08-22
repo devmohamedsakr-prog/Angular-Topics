@@ -41,38 +41,16 @@ jobs:
             echo "should-tag=true" >> $GITHUB_OUTPUT
             echo "version-type=initial" >> $GITHUB_OUTPUT
           else
-            # Get commits since last tag
-            COMMITS=$(git log $LAST_TAG..HEAD --oneline)
-            
-            if [ -z "$COMMITS" ]; then
-              echo "No changes since last tag"
-              echo "should-tag=false" >> $GITHUB_OUTPUT
-            else
-              # Analyze commit messages for version bump
-              if echo "$COMMITS" | grep -i "^BREAKING\|^feat!"; then
-                echo "Breaking changes detected - major version bump"
-                echo "should-tag=true" >> $GITHUB_OUTPUT
-                echo "version-type=major" >> $GITHUB_OUTPUT
-              elif echo "$COMMITS" | grep -i "^feat"; then
-                echo "New features detected - minor version bump"
-                echo "should-tag=true" >> $GITHUB_OUTPUT
-                echo "version-type=minor" >> $GITHUB_OUTPUT
-              elif echo "$COMMITS" | grep -i "^fix\|^docs\|^style\|^refactor"; then
-                echo "Bug fixes/updates detected - patch version bump"
-                echo "should-tag=true" >> $GITHUB_OUTPUT
-                echo "version-type=patch" >> $GITHUB_OUTPUT
-              else
-                echo "No version-triggering commits found"
-                echo "should-tag=false" >> $GITHUB_OUTPUT
-              fi
-            fi
+            # Always tag on any commit (no skip conditions)
+            echo "Changes detected"
+            echo "should-tag=true" >> $GITHUB_OUTPUT
+            echo "version-type=patch" >> $GITHUB_OUTPUT
           fi
 
   calculate-version:
     runs-on: ubuntu-latest
     name: Calculate Next Version
     needs: detect-changes
-    if: needs.detect-changes.outputs.should-tag == 'true'
     outputs:
       new-version: ${{ steps.calculate.outputs.new-version }}
       version-type: ${{ steps.calculate.outputs.version-type }}
@@ -119,6 +97,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Create Version Tag
     needs: calculate-version
+    permissions:
+      contents: write
     
     steps:
       - name: Checkout code
@@ -148,7 +128,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Notify Release
     needs: [calculate-version, create-tag]
-    if: success()
     
     steps:
       - name: Release notification

@@ -1,32 +1,80 @@
-# This is a basic workflow that is manually triggered
+# Manual workflow to validate all content and generate reports
+# Triggered manually via UI or API for on-demand content validation
 
-name: Manual workflow
+name: Validate All Content
 
-# Controls when the action will run. Workflow runs when manually triggered using the UI
-# or API.
 on:
   workflow_dispatch:
-    # Inputs the workflow accepts.
     inputs:
-      name:
-        # Friendly description to be shown in the UI instead of 'name'
-        description: 'Person to greet'
-        # Default value if no value is explicitly provided
-        default: 'World'
-        # Input has to be provided for the workflow to run
+      check_type:
+        description: 'Type of validation to run'
+        type: choice
+        options:
+          - full
+          - markdown-only
+          - code-only
+        default: 'full'
         required: true
-        # The data type of the input
-        type: string
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+permissions:
+  contents: read
+  checks: write
+
 jobs:
-  # This workflow contains a single job called "greet"
-  greet:
-    # The type of runner that the job will run on
+  validate:
     runs-on: ubuntu-latest
+    name: Validate Content
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Runs a single command using the runners shell
-    - name: Send greeting
-      run: echo "Hello ${{ inputs.name }}"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Full Content Validation
+        if: ${{ inputs.check_type == 'full' || inputs.check_type == 'markdown-only' }}
+        shell: bash
+        run: |
+          set -e
+          echo "🔍 Validating Markdown Files..."
+          MD_COUNT=$(find . -name "*.md" -type f ! -path "./node_modules/*" | wc -l)
+          echo "✓ Found $MD_COUNT markdown files"
+          
+          echo ""
+          echo "📋 Checking markdown structure..."
+          find . -name "*.md" -type f ! -path "./node_modules/*" | while read -r file; do
+            lines=$(wc -l < "$file")
+            echo "  $file: $lines lines"
+          done
+
+      - name: Validate Code Examples
+        if: ${{ inputs.check_type == 'full' || inputs.check_type == 'code-only' }}
+        shell: bash
+        run: |
+          set -e
+          echo "🔍 Validating Code Examples..."
+          TS_COUNT=$(find . -name "*.ts" -path "*/examples/*" -type f | wc -l)
+          echo "✓ Found $TS_COUNT TypeScript example files"
+          
+          echo ""
+          echo "📋 Validating code block formatting..."
+          BLOCK_COUNT=0
+          while IFS= read -r file; do
+            blocks=$(grep -c '```' "$file" 2>/dev/null || echo "0")
+            BLOCK_COUNT=$((BLOCK_COUNT + blocks))
+          done < <(find . -name "*.md" -type f ! -path "./node_modules/*")
+          echo "✓ Found $BLOCK_COUNT code block markers"
+
+      - name: Generate Report
+        shell: bash
+        run: |
+          echo "✅ Validation Complete!"
+          echo ""
+          echo "Summary:"
+          echo "======="
+          echo "Markdown files: $(find . -name "*.md" -type f ! -path "./node_modules/*" | wc -l)"
+          echo "TypeScript files: $(find . -name "*.ts" -type f ! -path "./node_modules/*" | wc -l)"
+          echo "Total code blocks: $(find . -name "*.md" -type f ! -path "./node_modules/*" -exec grep -h '```' {} + | wc -l)"

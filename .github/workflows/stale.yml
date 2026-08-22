@@ -1,27 +1,42 @@
 # This workflow warns and then closes issues and PRs that have had no activity for a specified amount of time.
-#
-# You can adjust the behavior by modifying this file.
-# For more information, see:
-# https://github.com/actions/stale
+# For more information, see: https://github.com/actions/stale
+
 name: Mark stale issues and pull requests
 
 on:
   schedule:
-  - cron: '27 14 * * *'
+    # Run at 2:00 PM UTC every day
+    - cron: '0 14 * * *'
 
 jobs:
   stale:
-
     runs-on: ubuntu-latest
     permissions:
       issues: write
       pull-requests: write
 
     steps:
-    - uses: actions/stale@v5
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        stale-issue-message: 'Stale issue message'
-        stale-pr-message: 'Stale pull request message'
-        stale-issue-label: 'no-issue-activity'
-        stale-pr-label: 'no-pr-activity'
+      - name: Mark stale issues and PRs
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # Issue configuration
+          stale-issue-message: 'This issue has been inactive for 30 days. It will be closed in 7 days if no activity occurs.'
+          stale-issue-label: 'stale'
+          days-before-issue-stale: 30
+          days-before-issue-close: 7
+          
+          # Pull request configuration
+          stale-pr-message: 'This pull request has been inactive for 14 days. It will be closed in 7 days if no activity occurs.'
+          stale-pr-label: 'stale'
+          days-before-pr-stale: 14
+          days-before-pr-close: 7
+          
+          # Exemptions
+          exempt-issue-labels: 'bug,feature,documentation,enhancement'
+          exempt-pr-labels: 'wip,do-not-merge'
+          
+          # Don't close automatically
+          delete-branch: false
+          close-issue-reason: 'not_planned'

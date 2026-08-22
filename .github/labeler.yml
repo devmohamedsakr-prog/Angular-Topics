@@ -1,0 +1,42 @@
+# Auto-labeler configuration for pull requests
+# Labels are automatically applied based on which files are changed
+
+# Documentation changes
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: ['**.md', 'docs/**']
+
+# TypeScript fundamentals
+typescript:
+  - changed-files:
+      - any-glob-to-any-file: ['1-Fundamentals/1-TypeScript/**']
+
+# ES6+ fundamentals
+es6plus:
+  - changed-files:
+      - any-glob-to-any-file: ['1-Fundamentals/2-ES6+/**']
+
+# Workflow/CI changes
+workflow:
+  - changed-files:
+      - any-glob-to-any-file: ['.github/workflows/**', '.github/labeler.yml']
+
+# Configuration changes
+config:
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**', '*.json', '*.yml', '*.yaml']
+
+# Security policy
+security:
+  - changed-files:
+      - any-glob-to-any-file: ['SECURITY.md', '.github/SECURITY.md']
+
+# Release/version changes
+release:
+  - changed-files:
+      - any-glob-to-any-file: ['RELEASES.md', 'CHANGELOG.md', 'package.json']
+
+# Content/examples
+examples:
+  - changed-files:
+      - any-glob-to-any-file: ['**/*.ts', '**/*.js', '**/*.tsx', '**/*.jsx']

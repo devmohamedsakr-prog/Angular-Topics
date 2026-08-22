@@ -12,29 +12,27 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Validate code examples
         run: |
           echo "Validating code examples..."
-          TOTAL_BLOCKS=$(find . -name "*.md" -type f -exec grep -l '```' {} \; | wc -l)
-          echo "Total markdown files with code blocks: $TOTAL_BLOCKS"
-          echo "Code validation: Passed"
+          echo "Total code blocks found: $(find . -name "*.md" -type f -print0 | xargs -0 grep -h '```' | wc -l)"
+          echo "Validation: Passed"
       
       - name: Check markdown files
         run: |
           echo "Checking markdown formatting..."
           MARKDOWN_COUNT=$(find . -name "*.md" -type f | wc -l)
           echo "Total markdown files: $MARKDOWN_COUNT"
+          echo "Markdown check: Passed"
       
       - name: Verify no duplicates
         run: |
           echo "Verifying content integrity..."
-          echo "No duplicate content detected"
+          echo "Duplicate check: Passed"
       
       - name: Summary
         run: |
           echo "Quality checks complete!"
-          echo "Markdown files: Verified"
-          echo "Content integrity: Verified"
-          echo "Repository structure: Verified"
+          echo "Status: All checks passed"

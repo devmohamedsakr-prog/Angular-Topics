@@ -47,38 +47,41 @@ jobs:
       - name: Check for empty files
         shell: bash
         run: |
-          set -e
           echo "Checking for empty files..."
-          find . -name "*.md" -type f -size 0 ! -path "./node_modules/*" | while read -r file; do
+          EMPTY_COUNT=0
+          find . -name "*.md" -type f -size 0 ! -path "./node_modules/*" -print0 | while IFS= read -r -d '' file; do
             echo "! Warning: Empty file: $file"
+            EMPTY_COUNT=$((EMPTY_COUNT + 1))
           done
           echo "Empty file check complete"
       
       - name: Validate file consistency
         shell: bash
         run: |
-          set -e
           echo "Checking file consistency..."
-          find . -name "*.md" -type f ! -path "./node_modules/*" | while read -r file; do
-            lines=$(wc -l < "$file")
-            echo "File: $file (lines: $lines)"
+          find . -name "*.md" -type f ! -path "./node_modules/*" -print0 | while IFS= read -r -d '' file; do
+            if [ -f "$file" ]; then
+              lines=$(wc -l < "$file")
+              echo "File: $file (lines: $lines)"
+            fi
           done
           echo "Consistency check complete"
       
       - name: Verify code examples
         shell: bash
         run: |
-          set -e
           echo "Validating code examples..."
+          echo "Scanning for code blocks in markdown files..."
           
-          # Count code blocks safely
-          total_blocks=0
-          while IFS= read -r file; do
-            blocks=$(grep -c '```' "$file" 2>/dev/null || echo "0")
-            total_blocks=$((total_blocks + blocks))
-          done < <(find . -name "*.md" -type f ! -path "./node_modules/*")
+          find . -name "*.md" -type f ! -path "./node_modules/*" -print0 | while IFS= read -r -d '' file; do
+            if [ -f "$file" ]; then
+              BLOCK_COUNT=$(grep -c '```' "$file" 2>/dev/null || echo "0")
+              if [ "$BLOCK_COUNT" -gt "0" ]; then
+                echo "File $file: $BLOCK_COUNT code block markers"
+              fi
+            fi
+          done
           
-          echo "Total code block markers found: $total_blocks"
           echo "Code example validation complete"
 
   dictionary-check:
